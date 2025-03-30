@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL 2025 Points Table</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        h1 {
+            color: #0a3d62;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .refresh-button {
+            background-color: #0a3d62;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .refresh-button:hover {
+            background-color: #1e5f8c;
+        }
+        .refresh-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .last-updated {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #0a3d62;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .team-cell {
+            display: flex;
+            align-items: center;
+        }
+        .team-logo {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+        }
+        .center {
+            text-align: center;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>IPL 2025 Points Table</h1>
+        
+        <div class="header">
+            <div>
+                <button id="refreshButton" class="refresh-button">Refresh Data</button>
+                <div id="lastUpdated" class="last-updated"></div>
+            </div>
+        </div>
+        
+        <div id="errorMessage" class="error" style="display: none;"></div>
+        
+        <div id="loading" class="loading">Loading points table data...</div>
+        
+        <table id="pointsTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th class="center">#</th>
+                    <th>Team</th>
+                    <th class="center">M</th>
+                    <th class="center">W</th>
+                    <th class="center">L</th>
+                    <th class="center">PT</th>
+                    <th class="center">NRR</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Table rows will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tableBody = document.getElementById('tableBody');
+            const refreshButton = document.getElementById('refreshButton');
+            const lastUpdatedElement = document.getElementById('lastUpdated');
+            const loadingElement = document.getElementById('loading');
+            const pointsTableElement = document.getElementById('pointsTable');
+            const errorMessageElement = document.getElementById('errorMessage');
+            
+            // Function to fetch points table data
+            async function fetchPointsTable() {
+                refreshButton.disabled = true;
+                loadingElement.style.display = 'block';
+                pointsTableElement.style.display = 'none';
+                errorMessageElement.style.display = 'none';
+                
+                try {
+                    const timestamp = new Date().getTime();
+                    const response = await fetch(`/api/series/indian-premier-league-2025/points?_t=${timestamp}`, {
+                        headers: {
+                            'Cache-Control': 'no-cache, no-store',
+                            'Pragma': 'no-cache',
+                            'Expires': '0'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data && data.success && data.pointsTable && data.pointsTable.length > 0) {
+                        renderPointsTable(data.pointsTable);
+                        updateLastRefreshed();
+                        pointsTableElement.style.display = 'table';
+                    } else {
+                        showError('No points table data available');
+                    }
+                } catch (error) {
+                    console.error('Error fetching points table:', error);
+                    showError('Failed to fetch points table data. Please try again.');
+                } finally {
+                    loadingElement.style.display = 'none';
+                    refreshButton.disabled = false;
+                }
+            }
+            
+            // Function to render the points table
+            function renderPointsTable(pointsTable) {
+                // Clear existing rows
+                tableBody.innerHTML = '';
+                
+                // Sort teams by points (descending) and then by NRR (descending)
+                const sortedTable = [...pointsTable].sort((a, b) => {
+                    if (b.points !== a.points) {
+                        return b.points - a.points;
+                    }
+                    return parseFloat(b.nrr) - parseFloat(a.nrr);
+                });
+                
+                // Create table rows
+                sortedTable.forEach((team, index) => {
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td class="center">${index + 1}</td>
+                        <td>
+                            <div class="team-cell">
+                                <span>${team.teamName || team.team}</span>
+                            </div>
+                        </td>
+                        <td class="center">${team.matches}</td>
+                        <td class="center">${team.won}</td>
+                        <td class="center">${team.lost}</td>
+                        <td class="center">${team.points}</td>
+                        <td class="center">${team.nrr}</td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+            }
+            
+            // Function to update last refreshed timestamp
+            function updateLastRefreshed() {
+                const now = new Date();
+                lastUpdatedElement.textContent = `Last updated: ${now.toLocaleTimeString()}`;
+            }
+            
+            // Function to show error message
+            function showError(message) {
+                errorMessageElement.textContent = message;
+                errorMessageElement.style.display = 'block';
+                pointsTableElement.style.display = 'none';
+            }
+            
+            // Fetch data on page load
+            fetchPointsTable();
+            
+            // Add event listener for refresh button
+            refreshButton.addEventListener('click', fetchPointsTable);
+        });
+    </script>
+</body>
+</html>

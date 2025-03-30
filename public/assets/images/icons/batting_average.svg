@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1A237E"/>
+      <stop offset="100%" stop-color="#3949AB"/>
+    </linearGradient>
+    <linearGradient id="batGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D3A04D"/>
+      <stop offset="100%" stop-color="#B8860B"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="12" cy="12" r="11" fill="url(#bgGradient)" stroke="#FFFFFF" stroke-width="0.5"/>
+  
+  <!-- Cricket bat -->
+  <path d="M6,8 L9,5 L11,7 L8,10 L6,8z" fill="url(#batGradient)" stroke="#8B4513" stroke-width="0.3"/>
+  <path d="M8,10 L6,12 L4,10 L6,8 L8,10z" fill="#F5DEB3" stroke="#8B4513" stroke-width="0.2"/>
+  
+  <!-- Cricket ball -->
+  <circle cx="16" cy="7" r="2.5" fill="#C5001A" stroke="#FFFFFF" stroke-width="0.3"/>
+  <path d="M14.5,6.5 C15,7 17,8 17.5,8.5" stroke="#FFFFFF" stroke-width="0.4" fill="none"/>
+  <path d="M14.5,8.5 C15,8 17,7 17.5,6.5" stroke="#FFFFFF" stroke-width="0.4" fill="none"/>
+  
+  <!-- Average graph bars -->
+  <rect x="7" y="14" width="2" height="6" rx="0.5" fill="#4CAF50" stroke="#FFFFFF" stroke-width="0.2"/>
+  <rect x="11" y="12" width="2" height="8" rx="0.5" fill="#FFC107" stroke="#FFFFFF" stroke-width="0.2"/>
+  <rect x="15" y="10" width="2" height="10" rx="0.5" fill="#F44336" stroke="#FFFFFF" stroke-width="0.2"/>
+  
+  <!-- Average line -->
+  <path d="M6,13 L18,13" stroke="#FFFFFF" stroke-width="0.8" stroke-dasharray="1,1"/>
+  
+  <!-- Average text -->
+  <text x="7.5" y="18.5" font-family="Arial" font-weight="bold" font-size="2.5" fill="#FFFFFF">AVG</text>
+</svg>

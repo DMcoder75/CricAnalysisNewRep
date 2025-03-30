@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="100" cy="100" r="90" fill="#004BA0" stroke="#D1AB3E" stroke-width="5"/>
+  <path d="M70,50 L130,50 L150,70 L150,130 L130,150 L70,150 L50,130 L50,70 Z" fill="none" stroke="#D1AB3E" stroke-width="3"/>
+  <text x="100" y="115" font-family="Arial, sans-serif" font-size="50" font-weight="bold" text-anchor="middle" fill="#D1AB3E">MI</text>
+  <path d="M85,70 L85,130 M115,70 L115,130 M85,100 L115,100" fill="none" stroke="#D1AB3E" stroke-width="4"/>
+</svg>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Cache and Reload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        button {
+            background-color: #0078BC;
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 18px;
+            margin: 10px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        h1 {
+            color: #0078BC;
+        }
+        .navigation {
+            margin-top: 30px;
+        }
+        .navigation a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Clear Cache and Reload</h1>
+    <p>This tool will clear your browser's cache and reload the application to fix any display issues.</p>
+    
+    <button id="clearCacheButton">Clear Cache and Reload</button>
+    <button id="hardRefreshButton">Hard Refresh (No Cache Clear)</button>
+    
+    <div id="result" class="result">Results will appear here...</div>
+    
+    <div class="navigation">
+        <a href="/">Go to Application</a>
+    </div>
+    
+    <script>
+        const resultDiv = document.getElementById('result');
+        const clearCacheButton = document.getElementById('clearCacheButton');
+        const hardRefreshButton = document.getElementById('hardRefreshButton');
+        
+        // Log to both console and result div
+        function log(message) {
+            console.log(message);
+            resultDiv.textContent += message + '\n';
+        }
+        
+        // Clear the result div
+        function clearResult() {
+            resultDiv.textContent = '';
+        }
+        
+        // Clear cache and reload button
+        clearCacheButton.addEventListener('click', async () => {
+            clearResult();
+            clearCacheButton.disabled = true;
+            log('Clearing cache and reloading...');
+            
+            try {
+                // Try to clear the cache using the Cache API
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    log(`Found ${cacheNames.length} caches to clear`);
+                    
+                    for (const cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                        log(`Cleared cache: ${cacheName}`);
+                    }
+                    
+                    log('All caches cleared successfully!');
+                } else {
+                    log('Cache API not available in this browser');
+                }
+                
+                // Clear IndexedDB
+                log('Clearing IndexedDB...');
+                const dbName = 'ipl-cricket-analytics';
+                
+                const deleteRequest = indexedDB.deleteDatabase(dbName);
+                
+                deleteRequest.onsuccess = function() {
+                    log('IndexedDB database deleted successfully');
+                    log('Reloading page in 2 seconds...');
+                    
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                };
+                
+                deleteRequest.onerror = function(event) {
+                    log(`Error deleting database: ${event.target.error}`);
+                };
+                
+                deleteRequest.onblocked = function() {
+                    log('Database deletion was blocked');
+                    log('Please close all other tabs with this site open and try again');
+                };
+                
+            } catch (error) {
+                log(`Error clearing cache: ${error.message}`);
+            } finally {
+                clearCacheButton.disabled = false;
+            }
+        });
+        
+        // Hard refresh button
+        hardRefreshButton.addEventListener('click', () => {
+            clearResult();
+            log('Performing hard refresh...');
+            
+            // Force a hard refresh
+            window.location.reload(true);
+        });
+    </script>
+</body>
+</html>

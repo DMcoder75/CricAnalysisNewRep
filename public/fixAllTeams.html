@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL Team Data Fixer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1, h2 {
+            color: #0078BC;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .team-selector {
+            margin-bottom: 20px;
+        }
+        select, button {
+            padding: 10px;
+            margin-right: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #0078BC;
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #005a8c;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .team-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+        }
+        .team-card h3 {
+            margin-top: 0;
+            color: #0078BC;
+            display: flex;
+            align-items: center;
+        }
+        .team-logo {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+        .status-ok {
+            background-color: #4CAF50;
+        }
+        .status-warning {
+            background-color: #FFC107;
+        }
+        .status-error {
+            background-color: #F44336;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .small-button {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        .navigation {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .navigation a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .team-stats {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #0078BC;
+            border-radius: 4px;
+            text-align: center;
+            color: white;
+            line-height: 20px;
+            transition: width 0.3s;
+        }
+        .tab-container {
+            margin-top: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            background-color: #f1f1f1;
+            border: none;
+            cursor: pointer;
+            margin-right: 2px;
+        }
+        .tab-button.active {
+            background-color: #0078BC;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>IPL Team Data Fixer</h1>
+    <p>This tool helps diagnose and fix player data issues for all IPL teams.</p>
+    
+    <div class="tab-container">
+        <div class="tab-buttons">
+            <button class="tab-button active" data-tab="teams">Team Diagnostics</button>
+            <button class="tab-button" data-tab="database">Database Tools</button>
+            <button class="tab-button" data-tab="logs">Activity Logs</button>
+        </div>
+        
+        <div id="teams-tab" class="tab-content active">
+            <div class="team-selector">
+                <select id="teamSelect">
+                    <option value="all">All Teams</option>
+                    <option value="1">Mumbai Indians</option>
+                    <option value="2">Chennai Super Kings</option>
+                    <option value="3">Royal Challengers Bangalore</option>
+                    <option value="4">Kolkata Knight Riders</option>
+                    <option value="5">Delhi Capitals</option>
+                    <option value="6">Punjab Kings</option>
+                    <option value="7">Rajasthan Royals</option>
+                    <option value="8">Sunrisers Hyderabad</option>
+                    <option value="9">Gujarat Titans</option>
+                    <option value="10">Lucknow Super Giants</option>
+                </select>
+                <button id="checkTeamButton">Check Selected Team</button>
+                <button id="checkAllButton">Check All Teams</button>
+            </div>
+            
+            <div id="teamCardsContainer" class="container"></div>
+        </div>
+        
+        <div id="database-tab" class="tab-content">
+            <h2>Database Management</h2>
+            <p>Use these tools to manage the database and fix common issues.</p>
+            
+            <div class="actions">
+                <button id="fixAllTeamsButton">Fix All Teams</button>
+                <button id="clearDuplicatesButton">Remove Duplicate Players</button>
+                <button id="resetDatabaseButton">Reset Database</button>
+            </div>
+            
+            <div id="databaseResult" class="result">Select an action to see results...</div>
+        </div>
+        
+        <div id="logs-tab" class="tab-content">
+            <h2>Activity Logs</h2>
+            <p>Record of all actions performed with this tool.</p>
+            
+            <div id="logsResult" class="result">No activities logged yet...</div>
+            <button id="clearLogsButton">Clear Logs</button>
+        </div>
+    </div>
+    
+    <div class="navigation">
+        <a href="/">Go to Application</a>
+        <a href="#" id="downloadDataButton">Download Database Data</a>
+    </div>
+    
+    <script type="module">
+        import dbService from '/src/services/dbService.js';
+        
+        // DOM Elements
+        const teamSelect = document.getElementById('teamSelect');
+        const checkTeamButton = document.getElementById('checkTeamButton');
+        const checkAllButton = document.getElementById('checkAllButton');
+        const fixAllTeamsButton = document.getElementById('fixAllTeamsButton');
+        const clearDuplicatesButton = document.getElementById('clearDuplicatesButton');
+        const resetDatabaseButton = document.getElementById('resetDatabaseButton');
+        const teamCardsContainer = document.getElementById('teamCardsContainer');
+        const databaseResult = document.getElementById('databaseResult');
+        const logsResult = document.getElementById('logsResult');
+        const clearLogsButton = document.getElementById('clearLogsButton');
+        const downloadDataButton = document.getElementById('downloadDataButton');
+        
+        // Tab functionality
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding content
+                button.classList.add('active');
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+            });
+        });
+        
+        // Team data with expected player counts
+        const teamData = {
+            1: { name: 'Mumbai Indians', expectedPlayers: 25, logo: '/assets/images/teams/MI.png' },
+            2: { name: 'Chennai Super Kings', expectedPlayers: 25, logo: '/assets/images/teams/CSK.png' },
+            3: { name: 'Royal Challengers Bangalore', expectedPlayers: 25, logo: '/assets/images/teams/RCB.png' },
+            4: { name: 'Kolkata Knight Riders', expectedPlayers: 25, logo: '/assets/images/teams/KKR.png' },
+            5: { name: 'Delhi Capitals', expectedPlayers: 22, logo: '/assets/images/teams/DC.png' },
+            6: { name: 'Punjab Kings', expectedPlayers: 25, logo: '/assets/images/teams/PBKS.png' },
+            7: { name: 'Rajasthan Royals', expectedPlayers: 25, logo: '/assets/images/teams/RR.png' },
+            8: { name: 'Sunrisers Hyderabad', expectedPlayers: 25, logo: '/assets/images/teams/SRH.png' },
+            9: { name: 'Gujarat Titans', expectedPlayers: 25, logo: '/assets/images/teams/GT.png' },
+            10: { name: 'Lucknow Super Giants', expectedPlayers: 25, logo: '/assets/images/teams/LSG.png' }
+        };
+        
+        // Activity logging
+        function logActivity(message) {
+            const timestamp = new Date().toLocaleString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logsResult.textContent = logEntry + '\n' + logsResult.textContent;
+            console.log(logEntry);
+        }
+        
+        // Clear logs
+        clearLogsButton.addEventListener('click', () => {
+            logsResult.textContent = 'Logs cleared...';
+            logActivity('Logs cleared');
+        });
+        
+        // Create team card
+        function createTeamCard(teamId, teamName, logo, playerCount, expectedCount) {
+            const card = document.createElement('div');
+            card.className = 'team-card';
+            card.id = `team-card-${teamId}`;
+            
+            const status = playerCount === expectedCount ? 'ok' : 
+                          playerCount > 0 ? 'warning' : 'error';
+            
+            const statusText = status === 'ok' ? 'Complete' : 
+                              status === 'warning' ? 'Incomplete' : 'Missing';
+            
+            const percentage = Math.min(100, Math.round((playerCount / expectedCount) * 100));
+            
+            card.innerHTML = `
+                <h3>
+                    <img src="${logo}" alt="${teamName}" class="team-logo">
+                    ${teamName}
+                    <span class="status-indicator status-${status}" title="${statusText}"></span>
+                </h3>
+                <div class="team-stats">
+                    Players: ${playerCount} / ${expectedCount} (${percentage}%)
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: ${percentage}%">${percentage}%</div>
+                </div>
+                <div class="actions">
+                    <button class="view-players-button small-button" data-team-id="${teamId}">View Players</button>
+                    <button class="fix-team-button small-button" data-team-id="${teamId}">Fix Team</button>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        // Check team players
+        async function checkTeam(teamId) {
+            try {
+                const allPlayers = await dbService.getAllPlayers();
+                const teamPlayers = allPlayers.filter(player => player.teamId === parseInt(teamId));
+                const teamInfo = teamData[teamId];
+                
+                logActivity(`Checked team: ${teamInfo.name} - Found ${teamPlayers.length} players`);
+                
+                return {
+                    id: teamId,
+                    name: teamInfo.name,
+                    logo: teamInfo.logo,
+                    playerCount: teamPlayers.length,
+                    expectedCount: teamInfo.expectedPlayers,
+                    players: teamPlayers
+                };
+            } catch (error) {
+                console.error(`Error checking team ${teamId}:`, error);
+                logActivity(`Error checking team ${teamId}: ${error.message}`);
+                return null;
+            }
+        }
+        
+        // Display team card
+        function displayTeamCard(teamData) {
+            if (!teamData) return;
+            
+            const existingCard = document.getElementById(`team-card-${teamData.id}`);
+            if (existingCard) {
+                existingCard.replaceWith(createTeamCard(
+                    teamData.id,
+                    teamData.name,
+                    teamData.logo,
+                    teamData.playerCount,
+                    teamData.expectedCount
+                ));
+            } else {
+                teamCardsContainer.appendChild(createTeamCard(
+                    teamData.id,
+                    teamData.name,
+                    teamData.logo,
+                    teamData.playerCount,
+                    teamData.expectedCount
+                ));
+            }
+        }
+        
+        // Check selected team
+        checkTeamButton.addEventListener('click', async () => {
+            const selectedTeamId = teamSelect.value;
+            
+            if (selectedTeamId === 'all') {
+                checkAllTeams();
+                return;
+            }
+            
+            checkTeamButton.disabled = true;
+            
+            const teamInfo = await checkTeam(selectedTeamId);
+            displayTeamCard(teamInfo);
+            
+            checkTeamButton.disabled = false;
+        });
+        
+        // Check all teams
+        async function checkAllTeams() {
+            checkAllButton.disabled = true;
+            teamCardsContainer.innerHTML = '';
+            
+            for (const teamId in teamData) {
+                const teamInfo = await checkTeam(teamId);
+                displayTeamCard(teamInfo);
+            }
+            
+            checkAllButton.disabled = false;
+        }
+        
+        checkAllButton.addEventListener('click', checkAllTeams);
+        
+        // Fix team players
+        async function fixTeam(teamId) {
+            databaseResult.textContent = `Fixing team ${teamData[teamId].name}...\n`;
+            
+            try {
+                // Get all players
+                const allPlayers = await dbService.getAllPlayers();
+                
+                // Filter for team players
+                const teamPlayers = allPlayers.filter(player => player.teamId === parseInt(teamId));
+                
+                databaseResult.textContent += `Found ${teamPlayers.length} existing players for ${teamData[teamId].name}\n`;
+                
+                // Find the highest player ID currently in use
+                const maxId = Math.max(...allPlayers.map(p => p.id));
+                let nextId = maxId + 1;
+                
+                // Generate missing players based on team
+                const missingCount = teamData[teamId].expectedPlayers - teamPlayers.length;
+                
+                if (missingCount <= 0) {
+                    databaseResult.textContent += `Team ${teamData[teamId].name} already has enough players (${teamPlayers.length})\n`;
+                    return teamPlayers.length;
+                }
+                
+                databaseResult.textContent += `Generating ${missingCount} missing players for ${teamData[teamId].name}...\n`;
+                
+                // Generate player roles with appropriate distribution
+                const roles = [];
+                const roleDistribution = {
+                    'Batter': 0.35,
+                    'Bowler': 0.35,
+                    'All-rounder': 0.2,
+                    'Wicket-keeper Batsman': 0.1
+                };
+                
+                for (let i = 0; i < missingCount; i++) {
+                    const rand = Math.random();
+                    let cumulativeProbability = 0;
+                    
+                    for (const role in roleDistribution) {
+                        cumulativeProbability += roleDistribution[role];
+                        if (rand < cumulativeProbability) {
+                            roles.push(role);
+                            break;
+                        }
+                    }
+                }
+                
+                // Generate player names
+                const firstNames = ['Rohit', 'Virat', 'MS', 'Ravindra', 'Jasprit', 'KL', 'Hardik', 'Rishabh', 'Shikhar', 'Yuzvendra', 'Bhuvneshwar', 'Suryakumar', 'Ajinkya', 'Shreyas', 'Deepak', 'Shardul', 'Washington', 'Kuldeep', 'Axar', 'Mayank', 'Prithvi', 'Ishan', 'Shubman', 'Venkatesh', 'Arshdeep', 'Avesh', 'Ravi', 'Umran', 'Rahul', 'Sanju'];
+                const lastNames = ['Sharma', 'Kohli', 'Dhoni', 'Jadeja', 'Bumrah', 'Rahul', 'Pandya', 'Pant', 'Dhawan', 'Chahal', 'Kumar', 'Yadav', 'Rahane', 'Iyer', 'Chahar', 'Thakur', 'Sundar', 'Yadav', 'Patel', 'Agarwal', 'Shaw', 'Kishan', 'Gill', 'Iyer', 'Singh', 'Khan', 'Bishnoi', 'Malik', 'Tripathi', 'Samson'];
+                
+                // Create new players
+                const newPlayers = [];
+                
+                for (let i = 0; i < missingCount; i++) {
+                    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+                    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+                    const name = `${firstName} ${lastName}`;
+                    const role = roles[i];
+                    
+                    const newPlayer = {
+                        id: nextId++,
+                        name: name,
+                        teamId: parseInt(teamId),
+                        role: role,
+                        battingStyle: Math.random() > 0.2 ? 'Right-handed' : 'Left-handed',
+                        bowlingStyle: role === 'Bowler' || role === 'All-rounder' ? 
+                            (Math.random() > 0.5 ? 'Right-arm fast' : 'Right-arm spin') : 'None',
+                        nationality: Math.random() > 0.7 ? 'Indian' : ['Australian', 'English', 'South African', 'West Indian', 'New Zealand'][Math.floor(Math.random() * 5)],
+                        age: Math.floor(Math.random() * 10) + 22,
+                        isCaptain: false,
+                        stats: {
+                            batting: {
+                                matches: Math.floor(Math.random() * 50) + 10,
+                                runs: Math.floor(Math.random() * 1000) + 200,
+                                average: Math.floor(Math.random() * 30) + 15,
+                                strikeRate: Math.floor(Math.random() * 40) + 120,
+                                fifties: Math.floor(Math.random() * 5),
+                                hundreds: Math.floor(Math.random() * 2)
+                            },
+                            bowling: {
+                                matches: Math.floor(Math.random() * 50) + 10,
+                                wickets: role.includes('Bowler') ? Math.floor(Math.random() * 50) + 20 : Math.floor(Math.random() * 10),
+                                economy: Math.floor(Math.random() * 3) + 7
+                            }
+                        }
+                    };
+                    
+                    newPlayers.push(newPlayer);
+                    databaseResult.textContent += `Generated player: ${newPlayer.name} (${newPlayer.role})\n`;
+                }
+                
+                // Store new players
+                await dbService.storePlayers(newPlayers);
+                
+                databaseResult.textContent += `Successfully added ${newPlayers.length} players to ${teamData[teamId].name}\n`;
+                logActivity(`Fixed team ${teamData[teamId].name}: Added ${newPlayers.length} players`);
+                
+                return teamPlayers.length + newPlayers.length;
+            } catch (error) {
+                console.error(`Error fixing team ${teamId}:`, error);
+                databaseResult.textContent += `Error: ${error.message}\n`;
+                logActivity(`Error fixing team ${teamId}: ${error.message}`);
+                return 0;
+            }
+        }
+        
+        // Fix all teams
+        fixAllTeamsButton.addEventListener('click', async () => {
+            fixAllTeamsButton.disabled = true;
+            databaseResult.textContent = 'Starting to fix all teams...\n';
+            
+            for (const teamId in teamData) {
+                databaseResult.textContent += `\n--- Processing ${teamData[teamId].name} ---\n`;
+                const playerCount = await fixTeam(teamId);
+                databaseResult.textContent += `${teamData[teamId].name} now has ${playerCount} players\n`;
+            }
+            
+            databaseResult.textContent += '\nAll teams have been processed. Refreshing team cards...\n';
+            await checkAllTeams();
+            
+            fixAllTeamsButton.disabled = false;
+            logActivity('Completed fixing all teams');
+        });
+        
+        // Remove duplicate players
+        clearDuplicatesButton.addEventListener('click', async () => {
+            clearDuplicatesButton.disabled = true;
+            databaseResult.textContent = 'Checking for duplicate players...\n';
+            
+            try {
+                const allPlayers = await dbService.getAllPlayers();
+                
+                // Find players with duplicate IDs
+                const playerIds = allPlayers.map(p => p.id);
+                const uniqueIds = [...new Set(playerIds)];
+                
+                if (playerIds.length === uniqueIds.length) {
+                    databaseResult.textContent += 'No duplicate player IDs found.\n';
+                } else {
+                    databaseResult.textContent += `Found ${playerIds.length - uniqueIds.length} duplicate player IDs.\n`;
+                    
+                    // Group players by ID
+                    const playersById = {};
+                    allPlayers.forEach(player => {
+                        if (!playersById[player.id]) {
+                            playersById[player.id] = [];
+                        }
+                        playersById[player.id].push(player);
+                    });
+                    
+                    // Find IDs with duplicates
+                    const duplicateIds = Object.keys(playersById).filter(id => playersById[id].length > 1);
+                    
+                    databaseResult.textContent += `Duplicate IDs: ${duplicateIds.join(', ')}\n`;
+                    
+                    // Find the highest player ID
+                    const maxId = Math.max(...playerIds);
+                    let nextId = maxId + 1;
+                    
+                    // Fix duplicates by assigning new IDs
+                    const playersToUpdate = [];
+                    
+                    duplicateIds.forEach(id => {
+                        const duplicates = playersById[id];
+                        
+                        // Keep the first player with the original ID
+                        const originalPlayer = duplicates[0];
+                        databaseResult.textContent += `Keeping player ${originalPlayer.name} with ID ${originalPlayer.id}\n`;
+                        
+                        // Assign new IDs to the rest
+                        for (let i = 1; i < duplicates.length; i++) {
+                            const duplicate = duplicates[i];
+                            const newId = nextId++;
+                            
+                            databaseResult.textContent += `Reassigning player ${duplicate.name} from ID ${duplicate.id} to ${newId}\n`;
+                            
+                            // Create updated player with new ID
+                            const updatedPlayer = { ...duplicate, id: newId };
+                            playersToUpdate.push(updatedPlayer);
+                        }
+                    });
+                    
+                    // Update players with new IDs
+                    await dbService.storePlayers(playersToUpdate);
+                    
+                    databaseResult.textContent += `Successfully reassigned ${playersToUpdate.length} duplicate players.\n`;
+                    logActivity(`Fixed ${playersToUpdate.length} duplicate player IDs`);
+                }
+            } catch (error) {
+                console.error('Error removing duplicates:', error);
+                databaseResult.textContent += `Error: ${error.message}\n`;
+                logActivity(`Error removing duplicates: ${error.message}`);
+            }
+            
+            clearDuplicatesButton.disabled = false;
+        });
+        
+        // Reset database
+        resetDatabaseButton.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to reset the database? This will delete all data and reinitialize the database.')) {
+                return;
+            }
+            
+            resetDatabaseButton.disabled = true;
+            databaseResult.textContent = 'Resetting database...\n';
+            
+            try {
+                // Clear the database
+                await dbService.clearDatabase();
+                databaseResult.textContent += 'Database cleared successfully.\n';
+                
+                // Reload the page to reinitialize the database
+                databaseResult.textContent += 'Reloading page to reinitialize database...\n';
+                logActivity('Database reset initiated');
+                
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            } catch (error) {
+                console.error('Error resetting database:', error);
+                databaseResult.textContent += `Error: ${error.message}\n`;
+                logActivity(`Error resetting database: ${error.message}`);
+                resetDatabaseButton.disabled = false;
+            }
+        });
+        
+        // Event delegation for team card buttons
+        teamCardsContainer.addEventListener('click', async (event) => {
+            // View players button
+            if (event.target.classList.contains('view-players-button')) {
+                const teamId = event.target.getAttribute('data-team-id');
+                const teamInfo = await checkTeam(teamId);
+                
+                if (teamInfo) {
+                    databaseResult.textContent = `Players for ${teamInfo.name}:\n\n`;
+                    
+                    teamInfo.players.forEach((player, index) => {
+                        databaseResult.textContent += `${index + 1}. ${player.name} (ID: ${player.id})\n`;
+                        databaseResult.textContent += `   Role: ${player.role}, Nationality: ${player.nationality || 'Indian'}\n`;
+                    });
+                    
+                    // Switch to database tab to show results
+                    document.querySelector('[data-tab="database"]').click();
+                }
+            }
+            
+            // Fix team button
+            if (event.target.classList.contains('fix-team-button')) {
+                const teamId = event.target.getAttribute('data-team-id');
+                
+                // Disable the button
+                event.target.disabled = true;
+                
+                // Fix the team
+                await fixTeam(teamId);
+                
+                // Refresh the team card
+                const teamInfo = await checkTeam(teamId);
+                displayTeamCard(teamInfo);
+                
+                // Enable the button
+                event.target.disabled = false;
+                
+                // Switch to database tab to show results
+                document.querySelector('[data-tab="database"]').click();
+            }
+        });
+        
+        // Download database data
+        downloadDataButton.addEventListener('click', async () => {
+            try {
+                const teams = await dbService.getAllTeams();
+                const players = await dbService.getAllPlayers();
+                const matches = await dbService.getAllMatches();
+                
+                const data = {
+                    teams,
+                    players,
+                    matches,
+                    exportDate: new Date().toISOString()
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ipl-database-export.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                logActivity('Database data exported');
+            } catch (error) {
+                console.error('Error downloading data:', error);
+                alert(`Error downloading data: ${error.message}`);
+                logActivity(`Error downloading data: ${error.message}`);
+            }
+        });
+        
+        // Initialize - check all teams on load
+        window.addEventListener('load', () => {
+            checkAllTeams();
+            logActivity('Application initialized');
+        });
+    </script>
+</body>
+</html>

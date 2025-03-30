@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E3C72"/>
+      <stop offset="100%" stop-color="#2A5298"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Main circle -->
+  <circle cx="12" cy="12" r="11" fill="url(#scoreGradient)" stroke="#FFC107" stroke-width="0.5"/>
+  
+  <!-- Cricket bat -->
+  <path d="M14.5,5 L16.5,7 L12.5,11 L11.5,10 L14.5,5z" fill="#D3A04D" stroke="#8B4513" stroke-width="0.2"/>
+  <path d="M11.5,10 L10.5,11 L9.5,10 L10.5,9 L11.5,10z" fill="#F5DEB3"/>
+  
+  <!-- Numbers/Score display -->
+  <rect x="7" y="13" width="10" height="5" rx="1" fill="#FFFFFF" opacity="0.9"/>
+  <text x="8.5" y="17" font-family="Arial" font-weight="bold" font-size="4" fill="#C5001A">200</text>
+  
+  <!-- Small cricket ball -->
+  <circle cx="17" cy="7" r="1.5" fill="#C5001A"/>
+  <path d="M16.2,6.2 C16.5,6.5 17.5,7.5 17.8,7.8" stroke="#FFFFFF" stroke-width="0.3" fill="none"/>
+  <path d="M16.2,7.8 C16.5,7.5 17.5,6.5 17.8,6.2" stroke="#FFFFFF" stroke-width="0.3" fill="none"/>
+</svg>

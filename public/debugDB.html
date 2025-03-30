@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Debug Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        select, input {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>IPL Cricket Analytics - Database Debug Tool</h1>
+    
+    <div class="controls">
+        <h2>Database Operations</h2>
+        <div>
+            <button id="clearDB">Clear Database</button>
+            <button id="initDB">Initialize Database</button>
+            <button id="checkTeams">Check Teams</button>
+        </div>
+        
+        <h2>Team Players</h2>
+        <div>
+            <select id="teamSelect">
+                <option value="1">Mumbai Indians</option>
+                <option value="2">Chennai Super Kings</option>
+                <option value="3">Royal Challengers Bangalore</option>
+                <option value="4">Kolkata Knight Riders</option>
+                <option value="5" selected>Delhi Capitals</option>
+                <option value="6">Punjab Kings</option>
+                <option value="7">Rajasthan Royals</option>
+                <option value="8">Sunrisers Hyderabad</option>
+                <option value="9">Gujarat Titans</option>
+                <option value="10">Lucknow Super Giants</option>
+            </select>
+            <button id="checkPlayers">Check Players</button>
+        </div>
+        
+        <h2>Fix Delhi Capitals Players</h2>
+        <div>
+            <button id="fixDC">Fix Delhi Capitals Players</button>
+        </div>
+    </div>
+    
+    <div id="result" class="result">Results will appear here...</div>
+    
+    <script type="module">
+        import dbService from '/src/services/dbService.js';
+        import initializeDatabase from '/src/utils/dbInitializer.js';
+        import debugDatabasePlayers from '/src/utils/debugDB.js';
+        
+        const resultDiv = document.getElementById('result');
+        
+        // Log to both console and result div
+        function log(message) {
+            console.log(message);
+            resultDiv.textContent += message + '\n';
+        }
+        
+        // Clear the result div
+        function clearResult() {
+            resultDiv.textContent = '';
+        }
+        
+        // Clear database button
+        document.getElementById('clearDB').addEventListener('click', async () => {
+            clearResult();
+            log('Clearing database...');
+            
+            try {
+                await dbService.clearStore('players');
+                await dbService.clearStore('teams');
+                await dbService.clearStore('matches');
+                log('Database cleared successfully!');
+            } catch (error) {
+                log(`Error clearing database: ${error.message}`);
+            }
+        });
+        
+        // Initialize database button
+        document.getElementById('initDB').addEventListener('click', async () => {
+            clearResult();
+            log('Initializing database...');
+            
+            try {
+                await initializeDatabase();
+                log('Database initialized successfully!');
+            } catch (error) {
+                log(`Error initializing database: ${error.message}`);
+            }
+        });
+        
+        // Check teams button
+        document.getElementById('checkTeams').addEventListener('click', async () => {
+            clearResult();
+            log('Checking teams...');
+            
+            try {
+                const teams = await dbService.getAllTeams();
+                log(`Found ${teams.length} teams in the database:`);
+                teams.forEach(team => {
+                    log(`ID: ${team.id}, Name: ${team.name}, ShortName: ${team.shortName}`);
+                });
+            } catch (error) {
+                log(`Error checking teams: ${error.message}`);
+            }
+        });
+        
+        // Check players button
+        document.getElementById('checkPlayers').addEventListener('click', async () => {
+            clearResult();
+            const teamId = document.getElementById('teamSelect').value;
+            log(`Checking players for team ID ${teamId}...`);
+            
+            try {
+                await debugDatabasePlayers(teamId);
+            } catch (error) {
+                log(`Error checking players: ${error.message}`);
+            }
+        });
+        
+        // Fix Delhi Capitals players button
+        document.getElementById('fixDC').addEventListener('click', async () => {
+            clearResult();
+            log('Fixing Delhi Capitals players...');
+            
+            try {
+                // Get all players
+                const allPlayers = await dbService.getAllPlayers();
+                
+                // Find Delhi Capitals players
+                const dcPlayers = allPlayers.filter(player => player.teamId === 5);
+                log(`Found ${dcPlayers.length} Delhi Capitals players in the database`);
+                
+                // If no players found, add them manually
+                if (dcPlayers.length < 22) {
+                    log('Adding Delhi Capitals players manually...');
+                    
+                    // Create an array of Delhi Capitals players
+                    const newDCPlayers = [];
+                    
+                    for (let i = 24; i <= 45; i++) {
+                        // Skip player ID 28 as it's already used
+                        if (i === 28) continue;
+                        
+                        // Add a new player
+                        newDCPlayers.push({
+                            id: i,
+                            name: `DC Player ${i}`,
+                            teamId: 5,
+                            role: i % 3 === 0 ? 'Bowler' : i % 3 === 1 ? 'Batsman' : 'All-rounder',
+                            battingStyle: i % 2 === 0 ? 'Right-handed' : 'Left-handed',
+                            bowlingStyle: i % 4 === 0 ? 'Right-arm fast' : i % 4 === 1 ? 'Left-arm fast' : i % 4 === 2 ? 'Right-arm spin' : 'Left-arm spin',
+                            nationality: 'Indian',
+                            age: 25 + (i % 10),
+                            stats: {
+                                batting: {
+                                    matches: 50,
+                                    runs: 1000,
+                                    average: 30,
+                                    strikeRate: 140,
+                                    fifties: 5,
+                                    hundreds: 1
+                                },
+                                bowling: {
+                                    matches: 50,
+                                    wickets: 40,
+                                    economy: 8.5
+                                }
+                            }
+                        });
+                    }
+                    
+                    // Add Mitchell Starc with ID 46
+                    newDCPlayers.push({
+                        id: 46,
+                        name: 'Mitchell Starc',
+                        teamId: 5,
+                        role: 'Bowler',
+                        battingStyle: 'Left-handed',
+                        bowlingStyle: 'Left-arm fast',
+                        nationality: 'Australia',
+                        age: 34,
+                        stats: {
+                            batting: {
+                                matches: 41,
+                                runs: 105,
+                                average: 10.50,
+                                strikeRate: 112.90,
+                                fifties: 0,
+                                hundreds: 0
+                            },
+                            bowling: {
+                                matches: 41,
+                                wickets: 55,
+                                economy: 8.68
+                            }
+                        }
+                    });
+                    
+                    // Store the new players
+                    await dbService.storePlayers(newDCPlayers);
+                    log(`Added ${newDCPlayers.length} Delhi Capitals players to the database`);
+                    
+                    // Check if they were added successfully
+                    const updatedPlayers = await dbService.getPlayersByTeam(5);
+                    log(`Now found ${updatedPlayers ? updatedPlayers.length : 0} Delhi Capitals players in the database`);
+                } else {
+                    log('Delhi Capitals players already exist in the database');
+                }
+            } catch (error) {
+                log(`Error fixing Delhi Capitals players: ${error.message}`);
+            }
+        });
+    </script>
+</body>
+</html>

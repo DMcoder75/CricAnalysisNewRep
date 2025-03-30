@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test MySQL Connection</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #0078d4;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #005a9e;
+        }
+        #results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test MySQL Connection</h1>
+    
+    <div class="card">
+        <h2>Connection Settings</h2>
+        <p>Server URL: <span id="serverUrl">http://localhost:5000</span></p>
+        <button onclick="updateServerUrl()">Change Server URL</button>
+    </div>
+    
+    <div class="card">
+        <h2>Test Connection</h2>
+        <button onclick="testMySQLStatus()">Test MySQL Server Status</button>
+        <button onclick="testDbStatus()">Test Database Connection</button>
+        <button onclick="testDbTables()">Test Database Tables</button>
+    </div>
+    
+    <div id="results" class="card">
+        <h2>Results</h2>
+        <div id="resultContent">
+            <p>Click one of the test buttons above to see results.</p>
+        </div>
+    </div>
+    
+    <script>
+        // Default server URL
+        let serverUrl = 'http://localhost:5000';
+        
+        // Update the server URL display
+        document.getElementById('serverUrl').textContent = serverUrl;
+        
+        // Function to update server URL
+        function updateServerUrl() {
+            const newUrl = prompt('Enter the server URL:', serverUrl);
+            if (newUrl) {
+                serverUrl = newUrl;
+                document.getElementById('serverUrl').textContent = serverUrl;
+            }
+        }
+        
+        // Function to display results
+        function displayResult(title, data, isError = false) {
+            const resultDiv = document.getElementById('resultContent');
+            resultDiv.innerHTML = `
+                <h3 class="${isError ? 'error' : 'success'}">${title}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+        }
+        
+        // Function to display error
+        function displayError(title, error) {
+            const resultDiv = document.getElementById('resultContent');
+            resultDiv.innerHTML = `
+                <h3 class="error">${title}</h3>
+                <p class="error">${error.message || 'Unknown error'}</p>
+                <pre>${error.stack || ''}</pre>
+            `;
+        }
+        
+        // Test MySQL server status
+        async function testMySQLStatus() {
+            try {
+                const response = await fetch(`${serverUrl}/api/mysql-status`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                displayResult('MySQL Server Status', data);
+            } catch (error) {
+                console.error('Error testing MySQL status:', error);
+                displayError('MySQL Server Status Error', error);
+            }
+        }
+        
+        // Test database connection
+        async function testDbStatus() {
+            try {
+                const response = await fetch(`${serverUrl}/api/db-status`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                displayResult('Database Connection Status', data);
+            } catch (error) {
+                console.error('Error testing database connection:', error);
+                displayError('Database Connection Error', error);
+            }
+        }
+        
+        // Test database tables
+        async function testDbTables() {
+            try {
+                const response = await fetch(`${serverUrl}/api/db-tables`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                displayResult('Database Tables', data);
+            } catch (error) {
+                console.error('Error testing database tables:', error);
+                displayError('Database Tables Error', error);
+            }
+        }
+    </script>
+</body>
+</html>

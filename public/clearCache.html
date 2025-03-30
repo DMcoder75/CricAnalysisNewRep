@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear IndexedDB Cache</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Clear IndexedDB Cache</h1>
+    <p>This tool will clear the IndexedDB database for the IPL Cricket Analytics application. Use this if you're experiencing issues with data not updating properly.</p>
+    
+    <button id="clearButton">Clear Database Cache</button>
+    <button id="goToApp">Go to Application</button>
+    
+    <div id="result" class="result"></div>
+    
+    <script>
+        document.getElementById('clearButton').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Clearing database...';
+            
+            try {
+                // Get all database names
+                const databases = await indexedDB.databases();
+                
+                // Delete each database
+                const deletePromises = databases.map(db => {
+                    return new Promise((resolve, reject) => {
+                        const request = indexedDB.deleteDatabase(db.name);
+                        request.onsuccess = () => {
+                            resolve(`Database ${db.name} deleted successfully`);
+                        };
+                        request.onerror = () => {
+                            reject(`Error deleting database ${db.name}`);
+                        };
+                    });
+                });
+                
+                // Wait for all deletions to complete
+                const results = await Promise.all(deletePromises);
+                
+                resultDiv.innerHTML = `
+                    <h3>Success!</h3>
+                    <p>All IndexedDB databases have been cleared. Please reload the application to reinitialize the database with fresh data.</p>
+                    <p>Details:</p>
+                    <ul>
+                        ${results.map(result => `<li>${result}</li>`).join('')}
+                    </ul>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>Error</h3>
+                    <p>An error occurred while clearing the database: ${error.message}</p>
+                `;
+                console.error('Error clearing database:', error);
+            }
+        });
+        
+        document.getElementById('goToApp').addEventListener('click', () => {
+            window.location.href = '/';
+        });
+    </script>
+</body>
+</html>

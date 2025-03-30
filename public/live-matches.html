@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Cricket Matches</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    <style>
+        :root {
+            --primary-color: #002c54;
+            --secondary-color: #0052a2;
+            --accent-color: #ff4444;
+            --text-color: #333;
+            --light-text: #fff;
+            --border-color: #e0e0e0;
+            --background-color: #f5f7fa;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+        }
+
+        .live-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            margin-right: 10px;
+            position: relative;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7);
+            }
+            
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(255, 68, 68, 0);
+            }
+            
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(255, 68, 68, 0);
+            }
+        }
+
+        .refresh-btn {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .refresh-btn i {
+            margin-right: 8px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+        }
+
+        .tab:hover:not(.active) {
+            background-color: #eaeaea;
+        }
+
+        .matches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .match-card {
+            background-color: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .match-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .match-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .match-format {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .match-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-live {
+            background-color: rgba(255, 68, 68, 0.1);
+            color: var(--accent-color);
+        }
+
+        .status-upcoming {
+            background-color: rgba(0, 82, 162, 0.1);
+            color: var(--secondary-color);
+        }
+
+        .status-completed {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: #4caf50;
+        }
+
+        .match-title {
+            padding: 10px 15px;
+            font-weight: 500;
+            font-size: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .teams-container {
+            padding: 15px;
+        }
+
+        .team {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .team:last-child {
+            margin-bottom: 0;
+        }
+
+        .team-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .team-logo {
+            width: 30px;
+            height: 30px;
+            background-color: #eee;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .pakistan-logo {
+            background-color: #009900 !important;
+            color: white !important;
+        }
+
+        .team-name {
+            font-size: 14px;
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .team-score {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .match-footer {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            background-color: #f9f9f9;
+        }
+
+        .match-date {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .watch-btn {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
+
+        .watch-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .no-matches {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 44, 84, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            color: var(--accent-color);
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            color: var(--light-text);
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-left: 20px;
+        }
+
+        .nav-links a {
+            color: var(--light-text);
+            text-decoration: none;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .nav-links a.active {
+            font-weight: bold;
+            border-bottom: 2px solid var(--light-text);
+        }
+
+        .pakistan-match {
+            border: 2px solid #009900;
+            box-shadow: 0 4px 8px rgba(0, 153, 0, 0.2);
+        }
+        
+        .pakistan-match:hover {
+            box-shadow: 0 8px 16px rgba(0, 153, 0, 0.3);
+        }
+        
+        .pakistan-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #009900;
+            color: white;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .matches-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header h1 {
+                margin-bottom: 15px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <img src="/assets/images/sitelogo/CricketHattrickLogo.png" alt="Crichattric Logo">
+                Crichattric
+            </a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/players">Players</a></li>
+                <li><a href="/matches">Matches</a></li>
+                <li><a href="/live-matches.html" class="active">Live Matches</a></li>
+                <li><a href="/teams">Teams</a></li>
+                <li><a href="/analytics">Analytics</a></li>
+                <li><a href="/insights">AI Insights</a></li>
+                <li><a href="/points">Points Table</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1><span class="live-dot"></span> Live Cricket Matches</h1>
+            <button id="refresh-btn" class="refresh-btn">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="live">Live</div>
+            <div class="tab" data-tab="upcoming">Upcoming</div>
+            <div class="tab" data-tab="completed">Completed</div>
+            <div class="tab" data-tab="pakistan" style="background-color: rgba(0, 153, 0, 0.1); color: #009900;">Pakistan</div>
+        </div>
+
+        <div id="matches-container" class="matches-grid">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State variables
+        let matches = [];
+        let loading = true;
+        let error = null;
+        let activeTab = 'live';
+
+        // DOM elements
+        const matchesContainer = document.getElementById('matches-container');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const tabs = document.querySelectorAll('.tab');
+
+        // Fetch matches data
+        async function fetchMatches() {
+            try {
+                loading = true;
+                updateUI();
+                
+                const timestamp = new Date().getTime();
+                const response = await fetch(`/api/live-cricket-matches?t=${timestamp}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch matches: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data && data.matches) {
+                    matches = data.matches;
+                    error = null;
+                } else {
+                    error = 'Invalid response format from server';
+                }
+            } catch (err) {
+                console.error('Error fetching matches:', err);
+                error = 'Failed to load matches. Please try again later.';
+            } finally {
+                loading = false;
+                updateUI();
+            }
+        }
+
+        // Filter matches based on active tab
+        function getFilteredMatches() {
+            if (activeTab === 'live') {
+                return matches.filter(match => match.isLive && !match.isEnded);
+            } else if (activeTab === 'upcoming') {
+                return matches.filter(match => !match.isLive && !match.isEnded);
+            } else if (activeTab === 'pakistan') {
+                return matches.filter(match => 
+                    (match.isPakistanMatch || 
+                    match.team1.name.toLowerCase().includes('pakistan') || 
+                    match.team2.name.toLowerCase().includes('pakistan'))
+                );
+            } else { // completed
+                return matches.filter(match => match.isEnded);
+            }
+        }
+
+        // Update UI based on current state
+        function updateUI() {
+            if (loading && matches.length === 0) {
+                matchesContainer.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                `;
+                return;
+            }
+
+            if (error && matches.length === 0) {
+                matchesContainer.innerHTML = `
+                    <div class="error">
+                        <p>${error}</p>
+                        <button class="refresh-btn" onclick="fetchMatches()">
+                            <i class="fas fa-sync-alt"></i> Retry
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const filteredMatches = getFilteredMatches();
+            
+            if (filteredMatches.length === 0) {
+                matchesContainer.innerHTML = `
+                    <div class="no-matches">
+                        <p>No ${activeTab} matches found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            matchesContainer.innerHTML = filteredMatches.map(match => {
+                // Determine if this is a Pakistan match for special styling
+                const isPakistanMatch = match.isPakistanMatch || 
+                    match.team1.name.toLowerCase().includes('pakistan') || 
+                    match.team2.name.toLowerCase().includes('pakistan');
+                
+                const cardClass = isPakistanMatch ? 'match-card pakistan-match' : 'match-card';
+                
+                return `
+                <div class="${cardClass}" onclick="viewMatch('${match.id}')">
+                    <div class="match-header">
+                        <span class="match-format">${match.format}</span>
+                        <span class="match-status status-${match.isLive ? 'live' : match.isEnded ? 'completed' : 'upcoming'}">${match.status}</span>
+                    </div>
+                    ${isPakistanMatch ? '<div class="pakistan-badge">PAK</div>' : ''}
+                    <div class="match-title">${match.title}</div>
+                    <div class="teams-container">
+                        <div class="team">
+                            <div class="team-info">
+                                <div class="team-logo ${match.team1.name.toLowerCase().includes('pakistan') ? 'pakistan-logo' : ''}">${match.team1.shortName.charAt(0)}</div>
+                                <div class="team-name">${match.team1.name}</div>
+                            </div>
+                            <div class="team-score">${match.team1.score}</div>
+                        </div>
+                        <div class="team">
+                            <div class="team-info">
+                                <div class="team-logo ${match.team2.name.toLowerCase().includes('pakistan') ? 'pakistan-logo' : ''}">${match.team2.shortName.charAt(0)}</div>
+                                <div class="team-name">${match.team2.name}</div>
+                            </div>
+                            <div class="team-score">${match.team2.score}</div>
+                        </div>
+                    </div>
+                    <div class="match-footer">
+                        <span class="match-date">${new Date(match.date).toLocaleDateString()}</span>
+                        <button class="watch-btn">Watch Live</button>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        // View match details
+        function viewMatch(matchId) {
+            window.location.href = `/live-match.html?id=${matchId}`;
+        }
+
+        // Event listeners
+        refreshBtn.addEventListener('click', fetchMatches);
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                activeTab = tab.dataset.tab;
+                
+                // Update active tab UI
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                updateUI();
+            });
+        });
+
+        // Initialize
+        fetchMatches();
+
+        // Set up auto-refresh (every 30 seconds)
+        setInterval(fetchMatches, 30000);
+    </script>
+</body>
+</html>

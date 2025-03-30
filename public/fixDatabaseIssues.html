@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Database Issues</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        button {
+            background-color: #0078BC;
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 18px;
+            margin: 10px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        h1 {
+            color: #0078BC;
+        }
+        .navigation {
+            margin-top: 30px;
+        }
+        .navigation a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .team-selector {
+            margin: 20px 0;
+        }
+        select {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Database Diagnostic and Repair Tool</h1>
+    <p>This tool helps diagnose and fix issues with the IPL Cricket Analytics database.</p>
+    
+    <div class="team-selector">
+        <label for="teamSelect">Select Team to Check: </label>
+        <select id="teamSelect">
+            <option value="1">Mumbai Indians</option>
+            <option value="2">Chennai Super Kings</option>
+            <option value="3">Royal Challengers Bangalore</option>
+            <option value="4">Kolkata Knight Riders</option>
+            <option value="5" selected>Delhi Capitals</option>
+            <option value="6">Punjab Kings</option>
+            <option value="7">Rajasthan Royals</option>
+            <option value="8">Sunrisers Hyderabad</option>
+            <option value="9">Gujarat Titans</option>
+            <option value="10">Lucknow Super Giants</option>
+        </select>
+    </div>
+    
+    <button id="checkButton">Check Team Players</button>
+    <button id="fixButton">Fix Database Issues</button>
+    <button id="clearButton">Clear Database and Reinitialize</button>
+    
+    <div id="result" class="result">Results will appear here...</div>
+    
+    <div class="navigation">
+        <a href="/">Go to Application</a>
+    </div>
+    
+    <script type="module">
+        import dbService from '/src/services/dbService.js';
+        import initializeDatabase from '/src/utils/dbInitializer.js';
+        
+        const resultDiv = document.getElementById('result');
+        const checkButton = document.getElementById('checkButton');
+        const fixButton = document.getElementById('fixButton');
+        const clearButton = document.getElementById('clearButton');
+        const teamSelect = document.getElementById('teamSelect');
+        
+        // Log to both console and result div
+        function log(message) {
+            console.log(message);
+            resultDiv.textContent += message + '\n';
+        }
+        
+        // Clear the result div
+        function clearResult() {
+            resultDiv.textContent = '';
+        }
+        
+        // Check team players button
+        checkButton.addEventListener('click', async () => {
+            clearResult();
+            checkButton.disabled = true;
+            const teamId = parseInt(teamSelect.value);
+            log(`Checking players for team ID ${teamId}...`);
+            
+            try {
+                // Get team info
+                const team = await dbService.getTeamById(teamId);
+                log(`Team: ${team ? team.name : 'Unknown'}`);
+                
+                // Check players using the database service
+                log('Checking players using database index...');
+                const players = await dbService.getPlayersByTeam(teamId);
+                log(`Found ${players.length} players for team ID ${teamId} using index`);
+                
+                // Check players by getting all players and filtering
+                log('Checking players by filtering all players...');
+                const allPlayers = await dbService.getAllPlayers();
+                const filteredPlayers = allPlayers.filter(p => p.teamId === teamId);
+                log(`Found ${filteredPlayers.length} players for team ID ${teamId} by filtering`);
+                
+                // Check for duplicate player IDs
+                log('\nChecking for duplicate player IDs across all teams...');
+                const playerIds = allPlayers.map(p => p.id);
+                const uniqueIds = new Set(playerIds);
+                if (playerIds.length !== uniqueIds.size) {
+                    log(`⚠️ ISSUE FOUND: There are duplicate player IDs in the database!`);
+                    log(`Total players: ${playerIds.length}, Unique IDs: ${uniqueIds.size}`);
+                    
+                    // Find the duplicates
+                    const counts = {};
+                    playerIds.forEach(id => {
+                        counts[id] = (counts[id] || 0) + 1;
+                    });
+                    
+                    const duplicates = Object.entries(counts)
+                        .filter(([id, count]) => count > 1)
+                        .map(([id, count]) => {
+                            const dupePlayerInfo = allPlayers
+                                .filter(p => p.id === parseInt(id))
+                                .map(p => `${p.name} (Team: ${p.teamId})`);
+                            return `ID ${id} appears ${count} times: ${dupePlayerInfo.join(', ')}`;
+                        });
+                    
+                    log('\nDuplicate IDs:');
+                    duplicates.forEach(dupe => log(dupe));
+                } else {
+                    log('✅ No duplicate player IDs found');
+                }
+                
+                // List the players found
+                if (players.length > 0) {
+                    log('\nPlayers found:');
+                    players.forEach((player, index) => {
+                        log(`${index + 1}. ID: ${player.id}, Name: ${player.name}, Role: ${player.role}`);
+                    });
+                } else {
+                    log('\n⚠️ No players found for this team!');
+                }
+                
+            } catch (error) {
+                log(`Error checking players: ${error.message}`);
+            } finally {
+                checkButton.disabled = false;
+            }
+        });
+        
+        // Fix database issues button
+        fixButton.addEventListener('click', async () => {
+            clearResult();
+            fixButton.disabled = true;
+            log('Fixing database issues...');
+            
+            try {
+                // Get all players
+                const allPlayers = await dbService.getAllPlayers();
+                
+                // Check for duplicate IDs
+                const playersByIdMap = {};
+                allPlayers.forEach(player => {
+                    if (!playersByIdMap[player.id]) {
+                        playersByIdMap[player.id] = [];
+                    }
+                    playersByIdMap[player.id].push(player);
+                });
+                
+                const duplicateIds = Object.entries(playersByIdMap)
+                    .filter(([id, players]) => players.length > 1)
+                    .map(([id, players]) => parseInt(id));
+                
+                if (duplicateIds.length > 0) {
+                    log(`Found ${duplicateIds.length} duplicate player IDs`);
+                    
+                    // Get the highest player ID currently in use
+                    const maxId = Math.max(...allPlayers.map(p => p.id));
+                    let nextId = maxId + 1;
+                    
+                    // Create a list of players to update with new IDs
+                    const playersToUpdate = [];
+                    
+                    // For each duplicate ID, keep the first player and update others
+                    duplicateIds.forEach(dupId => {
+                        const playersWithId = playersByIdMap[dupId];
+                        log(`Fixing duplicate ID ${dupId} (${playersWithId.length} players)`);
+                        
+                        // Keep the first player with this ID (usually for the intended team)
+                        const keepPlayer = playersWithId[0];
+                        log(`Keeping player: ${keepPlayer.name} (Team: ${keepPlayer.teamId})`);
+                        
+                        // Update IDs for other players with this ID
+                        for (let i = 1; i < playersWithId.length; i++) {
+                            const playerToUpdate = playersWithId[i];
+                            const oldId = playerToUpdate.id;
+                            playerToUpdate.id = nextId++;
+                            
+                            log(`Updating player: ${playerToUpdate.name} (Team: ${playerToUpdate.teamId}) from ID ${oldId} to ${playerToUpdate.id}`);
+                            playersToUpdate.push(playerToUpdate);
+                        }
+                    });
+                    
+                    // Update the players with new IDs
+                    if (playersToUpdate.length > 0) {
+                        log(`Updating ${playersToUpdate.length} players with new IDs...`);
+                        await dbService.storePlayers(playersToUpdate);
+                        log('✅ Players updated successfully!');
+                    }
+                } else {
+                    log('No duplicate player IDs found');
+                }
+                
+                // Check for Delhi Capitals players
+                const dcPlayers = allPlayers.filter(p => p.teamId === 5);
+                if (dcPlayers.length < 22) {
+                    log(`\nDelhi Capitals has only ${dcPlayers.length} players, adding missing players...`);
+                    
+                    // Get the highest player ID currently in use
+                    const maxId = Math.max(...allPlayers.map(p => p.id));
+                    let nextId = maxId + 1;
+                    
+                    // Create missing Delhi Capitals players
+                    const existingDcPlayerNames = dcPlayers.map(p => p.name.toLowerCase());
+                    const requiredDcPlayers = [
+                        { name: 'Axar Patel', role: 'All-rounder' },
+                        { name: 'Kuldeep Yadav', role: 'Bowler' },
+                        { name: 'Tristan Stubbs', role: 'Batter' },
+                        { name: 'Abishek Porel', role: 'Wicket-keeper Batsman' },
+                        { name: 'Ishant Sharma', role: 'Bowler' },
+                        { name: 'KL Rahul', role: 'Wicket-keeper Batsman', isCaptain: true },
+                        { name: 'Jake Fraser-McGurk', role: 'Batter' },
+                        { name: 'T Natarajan', role: 'Bowler' },
+                        { name: 'Karun Nair', role: 'Batter' },
+                        { name: 'Sameer Rizvi', role: 'All-rounder' },
+                        { name: 'Ashutosh Sharma', role: 'All-rounder' },
+                        { name: 'Mohit Sharma', role: 'Bowler' },
+                        { name: 'Faf du Plessis', role: 'Batter' },
+                        { name: 'Mukesh Kumar', role: 'Bowler' },
+                        { name: 'Darshan Nalkande', role: 'All-rounder' },
+                        { name: 'Vipraj Nigam', role: 'All-rounder' },
+                        { name: 'Dushmantha Chameera', role: 'Bowler' },
+                        { name: 'Donovan Ferreira', role: 'Batter' },
+                        { name: 'Ajay Mandal', role: 'All-rounder' },
+                        { name: 'Manvanth Kumar', role: 'All-rounder' },
+                        { name: 'Madhav Tiwari', role: 'All-rounder' },
+                        { name: 'Tripurana Vijay', role: 'All-rounder' },
+                        { name: 'Mitchell Starc', role: 'Bowler' }
+                    ];
+                    
+                    const missingPlayers = requiredDcPlayers.filter(
+                        required => !existingDcPlayerNames.includes(required.name.toLowerCase())
+                    );
+                    
+                    if (missingPlayers.length > 0) {
+                        log(`Found ${missingPlayers.length} missing Delhi Capitals players`);
+                        
+                        // Create the missing players
+                        const playersToAdd = missingPlayers.map(player => ({
+                            id: nextId++,
+                            name: player.name,
+                            teamId: 5, // Delhi Capitals
+                            role: player.role,
+                            battingStyle: player.battingStyle || 'Right-handed',
+                            bowlingStyle: player.bowlingStyle || 'None',
+                            nationality: player.nationality || 'Indian',
+                            age: player.age || Math.floor(Math.random() * 10) + 25,
+                            isCaptain: player.isCaptain || false,
+                            stats: {
+                                batting: {
+                                    matches: Math.floor(Math.random() * 50) + 10,
+                                    runs: Math.floor(Math.random() * 1000) + 200,
+                                    average: Math.floor(Math.random() * 30) + 15,
+                                    strikeRate: Math.floor(Math.random() * 40) + 120,
+                                    fifties: Math.floor(Math.random() * 5),
+                                    hundreds: Math.floor(Math.random() * 2)
+                                },
+                                bowling: {
+                                    matches: Math.floor(Math.random() * 50) + 10,
+                                    wickets: player.role.includes('Bowler') ? Math.floor(Math.random() * 50) + 20 : Math.floor(Math.random() * 10),
+                                    economy: Math.floor(Math.random() * 3) + 7
+                                }
+                            }
+                        }));
+                        
+                        log(`Adding ${playersToAdd.length} new Delhi Capitals players...`);
+                        playersToAdd.forEach(player => {
+                            log(`Adding player: ${player.name} (ID: ${player.id}, Role: ${player.role})`);
+                        });
+                        
+                        await dbService.storePlayers(playersToAdd);
+                        log('✅ Missing Delhi Capitals players added successfully!');
+                    } else {
+                        log('All required Delhi Capitals players exist but may have database retrieval issues');
+                    }
+                } else {
+                    log(`\n✅ Delhi Capitals has ${dcPlayers.length} players, which is sufficient`);
+                }
+                
+                log('\n✅ Database fix completed successfully!');
+                log('Please refresh the application to see the changes.');
+                
+            } catch (error) {
+                log(`Error fixing database issues: ${error.message}`);
+            } finally {
+                fixButton.disabled = false;
+            }
+        });
+        
+        // Clear database and reinitialize button
+        clearButton.addEventListener('click', async () => {
+            clearResult();
+            clearButton.disabled = true;
+            log('Clearing database and reinitializing...');
+            
+            try {
+                // Clear all stores
+                log('Clearing players store...');
+                await dbService.clearStore('players');
+                
+                log('Clearing teams store...');
+                await dbService.clearStore('teams');
+                
+                log('Clearing matches store...');
+                await dbService.clearStore('matches');
+                
+                log('Database cleared successfully!');
+                
+                // Reinitialize the database
+                log('Reinitializing database...');
+                await initializeDatabase();
+                
+                log('✅ Database reinitialized successfully!');
+                log('Please refresh the application to see the changes.');
+                
+            } catch (error) {
+                log(`Error clearing database: ${error.message}`);
+            } finally {
+                clearButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

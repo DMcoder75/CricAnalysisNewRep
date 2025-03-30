@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Delhi Capitals Players</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        button {
+            background-color: #0078BC;
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 18px;
+            margin: 10px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        h1 {
+            color: #0078BC;
+        }
+        .navigation {
+            margin-top: 30px;
+        }
+        .navigation a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fix Delhi Capitals Players</h1>
+    <p>This tool will fix the issue with Delhi Capitals players not showing up correctly in the team profile.</p>
+    
+    <button id="fixButton">Fix Delhi Capitals Players</button>
+    
+    <div id="result" class="result">Results will appear here...</div>
+    
+    <div class="navigation">
+        <a href="/">Go to Application</a>
+        <a href="/clearCache.html">Clear Cache Page</a>
+    </div>
+    
+    <script type="module">
+        import dbService from '/src/services/dbService.js';
+        import initializeDatabase from '/src/utils/dbInitializer.js';
+        
+        const resultDiv = document.getElementById('result');
+        const fixButton = document.getElementById('fixButton');
+        
+        // Log to both console and result div
+        function log(message) {
+            console.log(message);
+            resultDiv.textContent += message + '\n';
+        }
+        
+        // Clear the result div
+        function clearResult() {
+            resultDiv.textContent = '';
+        }
+        
+        // Fix Delhi Capitals players button
+        fixButton.addEventListener('click', async () => {
+            clearResult();
+            fixButton.disabled = true;
+            log('Fixing Delhi Capitals players...');
+            
+            try {
+                // Clear the database first
+                log('Clearing database...');
+                await dbService.clearStore('players');
+                await dbService.clearStore('teams');
+                await dbService.clearStore('matches');
+                log('Database cleared successfully!');
+                
+                // Reinitialize the database
+                log('Reinitializing database with fixed player IDs...');
+                await initializeDatabase();
+                log('Database reinitialized successfully!');
+                
+                // Check if the fix worked
+                log('Verifying Delhi Capitals players...');
+                const allPlayers = await dbService.getAllPlayers();
+                const dcPlayers = allPlayers.filter(player => player.teamId === 5);
+                
+                log(`Found ${dcPlayers.length} Delhi Capitals players in the database`);
+                
+                if (dcPlayers.length >= 22) {
+                    log('✅ SUCCESS: All Delhi Capitals players are now correctly in the database!');
+                    log('\nPlease go to the main application and check the Delhi Capitals team profile.');
+                } else {
+                    log('❌ ERROR: Still not finding all Delhi Capitals players. Please contact support.');
+                }
+                
+                // List all Delhi Capitals players
+                if (dcPlayers.length > 0) {
+                    log('\nDelhi Capitals Players:');
+                    dcPlayers.forEach(player => {
+                        log(`ID: ${player.id}, Name: ${player.name}, Role: ${player.role}`);
+                    });
+                }
+                
+            } catch (error) {
+                log(`Error fixing Delhi Capitals players: ${error.message}`);
+            } finally {
+                fixButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

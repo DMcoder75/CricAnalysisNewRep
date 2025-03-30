@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cricket API Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .success {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,0.3);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cricket API Debug</h1>
+        <p>Use this page to test the Cricket API integration and see raw responses.</p>
+        
+        <div>
+            <button id="testDirectApi">Test Direct API Call</button>
+            <button id="testServerApi">Test Server API Endpoint</button>
+            <span id="loading" class="loading" style="display: none;"></span>
+        </div>
+        
+        <h2>Results:</h2>
+        <pre id="results">No results yet. Click one of the buttons above to test the API.</pre>
+        
+        <h2>API Configuration:</h2>
+        <pre id="config"></pre>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const resultsElement = document.getElementById('results');
+            const configElement = document.getElementById('config');
+            const loadingElement = document.getElementById('loading');
+            
+            // Display current configuration
+            const apiKey = 'ec87bdff-0ea6-46dd-a353-6b0738a6b701';
+            const apiBaseUrl = 'https://api.cricapi.com/v1';
+            
+            configElement.innerHTML = `API Key: ${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 4)}
+API Base URL: ${apiBaseUrl}`;
+            
+            // Test direct API call
+            document.getElementById('testDirectApi').addEventListener('click', async function() {
+                loadingElement.style.display = 'inline-block';
+                resultsElement.innerHTML = 'Loading...';
+                
+                try {
+                    const response = await fetch(`${apiBaseUrl}/currentMatches?apikey=${apiKey}&offset=0`);
+                    const data = await response.json();
+                    
+                    resultsElement.innerHTML = `<span class="${response.ok ? 'success' : 'error'}">Status: ${response.status} ${response.statusText}</span>\n\n${JSON.stringify(data, null, 2)}`;
+                } catch (error) {
+                    resultsElement.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+                } finally {
+                    loadingElement.style.display = 'none';
+                }
+            });
+            
+            // Test server API endpoint
+            document.getElementById('testServerApi').addEventListener('click', async function() {
+                loadingElement.style.display = 'inline-block';
+                resultsElement.innerHTML = 'Loading...';
+                
+                try {
+                    const timestamp = new Date().getTime();
+                    const response = await fetch(`/api/matches/api-debug?t=${timestamp}`);
+                    const data = await response.json();
+                    
+                    resultsElement.innerHTML = `<span class="${response.ok ? 'success' : 'error'}">Status: ${response.status} ${response.statusText}</span>\n\n${JSON.stringify(data, null, 2)}`;
+                } catch (error) {
+                    resultsElement.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+                } finally {
+                    loadingElement.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

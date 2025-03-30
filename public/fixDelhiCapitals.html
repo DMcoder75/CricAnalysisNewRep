@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Delhi Capitals Players</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        button {
+            background-color: #0078BC;
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 18px;
+            margin: 10px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        h1 {
+            color: #0078BC;
+        }
+        .navigation {
+            margin-top: 30px;
+        }
+        .navigation a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fix Delhi Capitals Players</h1>
+    <p>This tool will ensure all 22 Delhi Capitals players are properly added to the database.</p>
+    
+    <button id="checkButton">Check Delhi Capitals Players</button>
+    <button id="fixButton">Add All Delhi Capitals Players</button>
+    
+    <div id="result" class="result">Results will appear here...</div>
+    
+    <div class="navigation">
+        <a href="/">Go to Application</a>
+    </div>
+    
+    <script type="module">
+        import dbService from '/src/services/dbService.js';
+        
+        const resultDiv = document.getElementById('result');
+        const checkButton = document.getElementById('checkButton');
+        const fixButton = document.getElementById('fixButton');
+        
+        // Log to both console and result div
+        function log(message) {
+            console.log(message);
+            resultDiv.textContent += message + '\n';
+        }
+        
+        // Clear the result div
+        function clearResult() {
+            resultDiv.textContent = '';
+        }
+        
+        // Check Delhi Capitals players button
+        checkButton.addEventListener('click', async () => {
+            clearResult();
+            checkButton.disabled = true;
+            log('Checking Delhi Capitals players...');
+            
+            try {
+                // Get all players
+                const allPlayers = await dbService.getAllPlayers();
+                
+                // Filter for Delhi Capitals players (team ID 5)
+                const dcPlayers = allPlayers.filter(player => player.teamId === 5);
+                
+                log(`Found ${dcPlayers.length} Delhi Capitals players in the database`);
+                
+                if (dcPlayers.length < 22) {
+                    log('\n⚠️ WARNING: Less than 22 Delhi Capitals players found!');
+                    log('Click the "Add All Delhi Capitals Players" button to fix this issue.');
+                } else {
+                    log('\n✅ SUCCESS: All Delhi Capitals players are in the database!');
+                }
+                
+                // List the players found
+                if (dcPlayers.length > 0) {
+                    log('\nDelhi Capitals Players:');
+                    dcPlayers.forEach((player, index) => {
+                        log(`${index + 1}. ID: ${player.id}, Name: ${player.name}, Role: ${player.role}`);
+                    });
+                }
+                
+            } catch (error) {
+                log(`Error checking players: ${error.message}`);
+            } finally {
+                checkButton.disabled = false;
+            }
+        });
+        
+        // Fix Delhi Capitals players button
+        fixButton.addEventListener('click', async () => {
+            clearResult();
+            fixButton.disabled = true;
+            log('Adding all Delhi Capitals players...');
+            
+            try {
+                // Get all players
+                const allPlayers = await dbService.getAllPlayers();
+                
+                // Find the highest player ID currently in use
+                const maxId = Math.max(...allPlayers.map(p => p.id));
+                let nextId = maxId + 1;
+                
+                // Filter for Delhi Capitals players (team ID 5)
+                const dcPlayers = allPlayers.filter(player => player.teamId === 5);
+                
+                log(`Found ${dcPlayers.length} existing Delhi Capitals players`);
+                
+                // Define all required Delhi Capitals players
+                const requiredDcPlayers = [
+                    { name: 'Axar Patel', role: 'All-rounder' },
+                    { name: 'Kuldeep Yadav', role: 'Bowler' },
+                    { name: 'Tristan Stubbs', role: 'Batter', nationality: 'South Africa' },
+                    { name: 'Abishek Porel', role: 'Wicket-keeper Batsman' },
+                    { name: 'Ishant Sharma', role: 'Bowler' },
+                    { name: 'KL Rahul', role: 'Wicket-keeper Batsman', isCaptain: true },
+                    { name: 'Jake Fraser-McGurk', role: 'Batter', nationality: 'Australia' },
+                    { name: 'T Natarajan', role: 'Bowler' },
+                    { name: 'Karun Nair', role: 'Batter' },
+                    { name: 'Sameer Rizvi', role: 'All-rounder' },
+                    { name: 'Ashutosh Sharma', role: 'All-rounder' },
+                    { name: 'Mohit Sharma', role: 'Bowler' },
+                    { name: 'Faf du Plessis', role: 'Batter', nationality: 'South Africa' },
+                    { name: 'Mukesh Kumar', role: 'Bowler' },
+                    { name: 'Darshan Nalkande', role: 'All-rounder' },
+                    { name: 'Vipraj Nigam', role: 'All-rounder' },
+                    { name: 'Dushmantha Chameera', role: 'Bowler', nationality: 'Sri Lanka' },
+                    { name: 'Donovan Ferreira', role: 'Batter', nationality: 'South Africa' },
+                    { name: 'Ajay Mandal', role: 'All-rounder' },
+                    { name: 'Manvanth Kumar', role: 'All-rounder' },
+                    { name: 'Madhav Tiwari', role: 'All-rounder' },
+                    { name: 'Tripurana Vijay', role: 'All-rounder' },
+                    { name: 'Mitchell Starc', role: 'Bowler', nationality: 'Australia' }
+                ];
+                
+                // Check which players are missing
+                const existingPlayerNames = dcPlayers.map(p => p.name.toLowerCase());
+                const missingPlayers = requiredDcPlayers.filter(
+                    required => !existingPlayerNames.includes(required.name.toLowerCase())
+                );
+                
+                if (missingPlayers.length > 0) {
+                    log(`Found ${missingPlayers.length} missing Delhi Capitals players`);
+                    
+                    // Create the missing players
+                    const playersToAdd = missingPlayers.map(player => ({
+                        id: nextId++,
+                        name: player.name,
+                        teamId: 5, // Delhi Capitals
+                        role: player.role,
+                        battingStyle: player.battingStyle || 'Right-handed',
+                        bowlingStyle: player.bowlingStyle || 'None',
+                        nationality: player.nationality || 'Indian',
+                        age: player.age || Math.floor(Math.random() * 10) + 25,
+                        isCaptain: player.isCaptain || false,
+                        stats: {
+                            batting: {
+                                matches: Math.floor(Math.random() * 50) + 10,
+                                runs: Math.floor(Math.random() * 1000) + 200,
+                                average: Math.floor(Math.random() * 30) + 15,
+                                strikeRate: Math.floor(Math.random() * 40) + 120,
+                                fifties: Math.floor(Math.random() * 5),
+                                hundreds: Math.floor(Math.random() * 2)
+                            },
+                            bowling: {
+                                matches: Math.floor(Math.random() * 50) + 10,
+                                wickets: player.role.includes('Bowler') ? Math.floor(Math.random() * 50) + 20 : Math.floor(Math.random() * 10),
+                                economy: Math.floor(Math.random() * 3) + 7
+                            }
+                        }
+                    }));
+                    
+                    log(`Adding ${playersToAdd.length} new Delhi Capitals players...`);
+                    playersToAdd.forEach(player => {
+                        log(`Adding player: ${player.name} (ID: ${player.id}, Role: ${player.role})`);
+                    });
+                    
+                    await dbService.storePlayers(playersToAdd);
+                    log('✅ Missing Delhi Capitals players added successfully!');
+                    log('Please refresh the application to see the changes.');
+                } else {
+                    log('All required Delhi Capitals players already exist in the database.');
+                    log('If you are still having issues, there might be a problem with retrieving the players.');
+                    log('Try clearing the database and reloading the application.');
+                }
+                
+            } catch (error) {
+                log(`Error adding players: ${error.message}`);
+            } finally {
+                fixButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
